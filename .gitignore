@@ -12,6 +12,14 @@
 
 # testing
 /coverage
+/tests/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# documentation
+/docs/
 
 # next.js
 /.next/
@@ -39,3 +47,28 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# Temporary folders
+tmp/
+temp/
+
+# Supabase local
+supabase/.env
