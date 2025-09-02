@@ -270,6 +270,7 @@ export const sessionsService = {
   async interruptSession(sessionId: string, userId: string): Promise<void> {
     logDatabaseQuery('sessions', 'interruptSession', { sessionId });
 
+    // Update session as interrupted
     const { error } = await supabase
       .from('sessions')
       .update({
@@ -283,6 +284,10 @@ export const sessionsService = {
     if (error) {
       throw handleApiError(error, 'interruptSession');
     }
+
+    // Record XP in tracking table
+    const { xpService } = await import('@/services/xp.service');
+    await xpService.recordXP(userId, 10, 'session_completion', sessionId);
   },
 
   /**

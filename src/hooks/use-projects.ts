@@ -243,8 +243,8 @@ export function useCompleteProject() {
     },
     
     onSuccess: ({ project, xpEarned }: ProjectCompletionResult) => {
-      // Invalidate related caches
-      queryKeyUtils.getProjectCompletionKeys(project.id).forEach(key => {
+      // Invalidate related caches including XP queries
+      queryKeyUtils.getProjectCompletionKeys(project.id, user!.id).forEach(key => {
         queryClient.invalidateQueries({ queryKey: key });
       });
       

@@ -32,7 +32,7 @@ export function useCurrentWeekXP() {
   const { user } = useAuth();
   
   return useQuery({
-    queryKey: queryKeys.xp.currentWeek(user!.id),
+    queryKey: user ? queryKeys.xp.currentWeek(user.id) : ['xp', 'current-week', 'disabled'],
     queryFn: () => xpService.getCurrentWeekXP(user!.id),
     enabled: !!user,
     staleTime: 30 * 1000, // 30 seconds for real-time feel

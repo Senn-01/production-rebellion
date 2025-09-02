@@ -359,6 +359,42 @@ export const capturesService = {
     if (error) {
       throw handleApiError(error, 'deleteCapture');
     }
+  },
+
+  /**
+   * Get all parking lot items for user
+   */
+  async getParkingLotItems(userId: string): Promise<ParkingLotItem[]> {
+    logDatabaseQuery('parking_lot', 'getParkingLotItems', { userId });
+
+    const { data, error } = await supabase
+      .from('parking_lot')
+      .select('*')
+      .eq('user_id', userId)
+      .order('parked_at', { ascending: false }); // Most recent first
+
+    if (error) {
+      throw handleApiError(error, 'getParkingLotItems');
+    }
+
+    return data || [];
+  },
+
+  /**
+   * Delete parking lot item permanently
+   */
+  async deleteParkingLotItem(itemId: string, userId: string): Promise<void> {
+    logDatabaseQuery('parking_lot', 'deleteParkingLotItem', { itemId });
+
+    const { error } = await supabase
+      .from('parking_lot')
+      .delete()
+      .eq('id', itemId)
+      .eq('user_id', userId);
+
+    if (error) {
+      throw handleApiError(error, 'deleteParkingLotItem');
+    }
   }
 };
 

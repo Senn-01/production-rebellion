@@ -189,7 +189,7 @@ export function useSessions({ userId, enableRealtime = true }: UseSessionsOption
       queryClient.setQueryData(QUERY_KEYS.sessions.active(userId), null);
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.sessions.today(userId) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.sessions.todayProgress(userId) });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.xp.current(userId) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.xp.currentWeek(userId) });
       
       toast.success(`Session complete! +${xpEarned} XP earned 🎉`);
     },
@@ -208,6 +208,7 @@ export function useSessions({ userId, enableRealtime = true }: UseSessionsOption
       // Update caches
       queryClient.setQueryData(QUERY_KEYS.sessions.active(userId), null);
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.sessions.today(userId) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.xp.currentWeek(userId) });
       
       toast.info('Session interrupted. +10 XP for the attempt 💪');
     },
@@ -313,7 +314,29 @@ export function useSessions({ userId, enableRealtime = true }: UseSessionsOption
       const storedTimer = timerManager.getStoredTimerData(activeSession.id);
       if (storedTimer && (storedTimer.state === 'running' || storedTimer.state === 'paused')) {
         console.log('[useSessions] Recovering active session timer');
-        startTimer(activeSession);
+        
+        // Create timer instance for recovery (restore existing state, don't restart)
+        const timer = new SessionTimer({
+          sessionId: activeSession.id,
+          userId: userId,
+          duration: activeSession.duration,
+          onTick: (remainingSeconds: number, progress: number) => {
+            setTimerState({
+              remainingTime: remainingSeconds,
+              progress,
+              isRunning: true,
+              isPaused: false,
+              state: 'running',
+              formattedTime: sessionTimerUtils.formatTime(remainingSeconds),
+              difficultyQuote: sessionTimerUtils.getDifficultyQuote(activeSession.willpower, activeSession.duration)
+            });
+          },
+          onComplete: () => {
+            console.log('[useSessions] Session completed');
+            setTimerState(prev => ({ ...prev, state: 'completed' }));
+          }
+        });
+        timerRef.current = timer;
       }
     } else if (!activeSession && timerRef.current) {
       // No active session but timer running - cleanup

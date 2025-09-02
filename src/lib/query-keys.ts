@@ -92,9 +92,10 @@ export const queryKeyUtils = {
   /**
    * Invalidate keys affected by project completion
    */
-  getProjectCompletionKeys: (projectId: string) => [
+  getProjectCompletionKeys: (projectId: string, userId?: string) => [
     QUERY_KEYS.projects(),
     QUERY_KEYS.project(projectId),
+    ...(userId ? [QUERY_KEYS.xp.currentWeek(userId), QUERY_KEYS.xp.all(userId)] : []),
     QUERY_KEYS.weeklyXp(),
     QUERY_KEYS.achievements()
   ],

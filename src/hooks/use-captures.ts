@@ -364,3 +364,66 @@ export function useDeleteCapture() {
     }
   });
 }
+
+/**
+ * Get parking lot items for user
+ */
+export function useParkingLotItems() {
+  const { user } = useAuth();
+  
+  return useQuery({
+    queryKey: queryKeys.parkingLot(),
+    queryFn: () => capturesService.getParkingLotItems(user!.id),
+    enabled: !!user,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+/**
+ * Delete parking lot item permanently
+ */
+export function useDeleteParkingLotItem() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  
+  return useMutation({
+    mutationFn: (itemId: string) => 
+      capturesService.deleteParkingLotItem(itemId, user!.id),
+    
+    onMutate: async (itemId) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: queryKeys.parkingLot() });
+      
+      // Snapshot previous value
+      const previousItems = queryClient.getQueryData(queryKeys.parkingLot());
+      
+      // Optimistically remove from list
+      queryClient.setQueryData(
+        queryKeys.parkingLot(),
+        (old: any[]) => old?.filter(item => item.id !== itemId)
+      );
+      
+      return { previousItems };
+    },
+    
+    onError: (error, _, context) => {
+      // Rollback optimistic update
+      if (context?.previousItems) {
+        queryClient.setQueryData(queryKeys.parkingLot(), context.previousItems);
+      }
+      
+      const appError = handleApiError(error, 'deleteParkingLotItem');
+      toast.error(getToastMessage(appError));
+    },
+    
+    onSuccess: () => {
+      toast.success('Item removed from parking lot');
+    },
+    
+    onSettled: () => {
+      // Always refetch to ensure consistency
+      queryClient.invalidateQueries({ queryKey: queryKeys.parkingLot() });
+    }
+  });
+}

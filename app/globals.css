@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "../src/styles/neo-brutalist.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -44,9 +45,16 @@
 }
 
 :root {
-  --radius: 0.625rem;
+  --radius: 0rem; /* Neo-brutalist: no rounded corners */
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
+  
+  /* Theme System - Default to Tactical Map */
+  --theme-primary: #FDE047;
+  --theme-background: #FFF8DC;
+  --theme-accent: #f7f7f5;
+  --theme-text: #000000;
+  --theme-text-secondary: #525252;
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
