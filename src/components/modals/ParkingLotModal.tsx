@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/Button';
 interface ParkingLotItem {
   id: string;
   content: string;
-  parked_at: string;
+  parked_at: string | null;
 }
 
 interface ParkingLotModalProps {
@@ -75,11 +75,11 @@ export function ParkingLotModal({
                     <div className="flex items-center gap-2 mb-3">
                       <Calendar className="w-4 h-4 text-[#525252]" />
                       <span className="text-xs font-bold uppercase tracking-wide text-black/70 font-mono">
-                        ADDED {new Date(item.parked_at).toLocaleDateString('en-US', { 
+                        ADDED {item.parked_at ? new Date(item.parked_at).toLocaleDateString('en-US', { 
                           month: 'short', 
                           day: 'numeric', 
                           year: 'numeric' 
-                        })}
+                        }) : 'UNKNOWN DATE'}
                       </span>
                     </div>
                     <p className="font-mono text-black leading-tight mb-4">

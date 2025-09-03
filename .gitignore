@@ -19,7 +19,6 @@
 *.spec.tsx
 
 # documentation
-/docs/
 
 # next.js
 /.next/

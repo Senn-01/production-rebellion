@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: false,
   },
 
+  // Allow local network access in development
+  ...(process.env.NODE_ENV === 'development' && {
+    allowedDevOrigins: ['192.168.1.9'],
+  }),
+
   // Performance optimizations
   experimental: {
     // Enable optimizePackageImports for better bundle size
@@ -35,7 +40,7 @@ const nextConfig: NextConfig = {
   // Bundle analysis (can be enabled when needed)
   // This will be useful for Phase 4 performance optimization
   ...(process.env.ANALYZE === 'true' && {
-    webpack: (config: any) => {
+    webpack: (config: any) => { // Note: Next.js webpack config typing is complex
       config.plugins.push(
         new (require('@next/bundle-analyzer'))({
           enabled: true,

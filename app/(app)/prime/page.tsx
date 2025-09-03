@@ -3,7 +3,7 @@
 import React from 'react';
 import { User, Settings, MessageCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+// import { Button } from '@/components/ui/Button'; // TODO: Will be used in full Prime implementation
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function PrimePage() {

@@ -61,11 +61,13 @@ export const themes = {
   
   focus: {
     name: 'DeepFocus', 
-    primary: '#CFE820',        // Lime green
-    background: '#3a6a2e',     // Medium green
-    accent: '#E5B6E5',         // Pink highlights
-    text: '#224718',           // Dark green
-    textSecondary: '#FFFFFF',  // White text
+    primary: '#CFE820',        // Lime green - main setup box background
+    background: '#3a6a2e',     // Medium green - page background
+    accent: '#E5B6E5',         // Pink highlights - target icon, headings
+    text: '#224718',           // Dark green - main text color
+    textSecondary: '#FFFFFF',  // White text - for contrast on green
+    timerBackground: '#E5EED0', // Light green - timer card background
+    cardBackground: '#FFFFFF', // White - card backgrounds
   },
 
   analytics: {
@@ -94,13 +96,24 @@ export type Theme = typeof themes[ThemeName];
 export function generateThemeCSS(themeName: ThemeName): Record<string, string> {
   const theme = themes[themeName];
   
-  return {
+  const baseVariables = {
     '--theme-primary': theme.primary,
     '--theme-background': theme.background, 
     '--theme-accent': theme.accent,
     '--theme-text': theme.text,
     '--theme-text-secondary': theme.textSecondary,
   };
+
+  // Add theme-specific variables for focus theme
+  if (themeName === 'focus') {
+    return {
+      ...baseVariables,
+      '--theme-timer-background': (theme as any).timerBackground,
+      '--theme-card-background': (theme as any).cardBackground,
+    };
+  }
+
+  return baseVariables;
 }
 
 // Priority Colors (used across all themes)

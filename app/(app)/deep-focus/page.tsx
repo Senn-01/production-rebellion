@@ -1,12 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Play, Timer, Target, CheckCircle } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Play, Target, CheckCircle, Zap, Coffee, BatteryLow } from 'lucide-react';
+// import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProjects } from '@/hooks/use-projects';
 import { useSessions } from '@/hooks/useSessions';
+import { toast } from 'sonner';
+import { preloadCompletionSound } from '@/lib/audio-utils';
 import { DailyCommitmentModal } from '@/components/deep-focus/DailyCommitmentModal';
 import { SessionCompletionModal } from '@/components/deep-focus/SessionCompletionModal';
 import { SessionTimerDisplay } from '@/components/deep-focus/SessionTimerDisplay';
@@ -20,7 +22,7 @@ type ModalState = 'none' | 'commitment' | 'completion' | 'interrupt';
 
 export default function DeepFocusPage() {
   const { user, loading } = useAuth();
-  const { data: projects = [], isLoading: projectsLoading } = useProjects();
+  const { data: projects = [] } = useProjects();
   
   // Session state management
   const [sessionState, setSessionState] = useState<SessionState>('setup');
@@ -29,6 +31,7 @@ export default function DeepFocusPage() {
   const [willpower, setWillpower] = useState<SessionWillpower | null>(null);
   const [modalState, setModalState] = useState<ModalState>('none');
   const [needsCommitmentCheck, setNeedsCommitmentCheck] = useState(true);
+  const [isCompletingSession, setIsCompletingSession] = useState(false);
   
   // Sessions hook integration
   const {
@@ -40,21 +43,25 @@ export default function DeepFocusPage() {
     interruptSession,
     setDailyCommitment,
     isLoadingActiveSession,
-    getDifficultyQuote,
-    formatTime
+    getDifficultyQuote
   } = useSessions({ userId: user?.id || '', enableRealtime: true });
 
-  // Check for daily commitment on mount
+  // Preload completion sound for better UX
+  useEffect(() => {
+    preloadCompletionSound();
+  }, []);
+
+  // Check for daily commitment on mount - only if no active session
   useEffect(() => {
     if (user && needsCommitmentCheck && !isLoadingActiveSession) {
-      // Check if we already have a commitment today
-      if (!todayProgress?.commitment) {
+      // Priority: Active session recovery takes precedence over commitment modal
+      if (!activeSession && !todayProgress?.commitment) {
         // First visit after midnight - show commitment modal
         setModalState('commitment');
       }
       setNeedsCommitmentCheck(false);
     }
-  }, [user, needsCommitmentCheck, isLoadingActiveSession, todayProgress]);
+  }, [user, needsCommitmentCheck, isLoadingActiveSession, todayProgress, activeSession]);
   
   // Handle session recovery - restore state if active session exists
   useEffect(() => {
@@ -109,16 +116,21 @@ export default function DeepFocusPage() {
   };
   
   const handleCompleteSession = async (mindset: SessionMindset) => {
+    setIsCompletingSession(true);
     try {
       await completeSession(mindset);
+      // Success path - reset all state
       setSessionState('setup');
       setModalState('none');
-      
-      // Reset form
       setSelectedProject('');
       setWillpower(null);
     } catch (error) {
       console.error('Failed to complete session:', error);
+      toast.error('Failed to save session. Please try again.');
+      // Still close modal on error to unblock UI
+      setModalState('none');
+    } finally {
+      setIsCompletingSession(false);
     }
   };
   
@@ -149,6 +161,21 @@ export default function DeepFocusPage() {
     setModalState('none');
   };
 
+  // Modal priority system - ensures only one modal at a time
+  const getActiveModal = (): ModalState => {
+    // Priority order: interrupt > completion > commitment
+    if (modalState === 'interrupt' && timerState.formattedTime) {
+      return 'interrupt';
+    }
+    if (modalState === 'completion') {
+      return 'completion';
+    }
+    if (modalState === 'commitment' && !activeSession) {
+      return 'commitment';
+    }
+    return 'none';
+  };
+
   // Today's Progress Display
   const renderProgressSummary = () => {
     if (!todayProgress) return null;
@@ -164,7 +191,7 @@ export default function DeepFocusPage() {
               <Target className="w-6 h-6 text-[var(--theme-text)]" />
               <div>
                 <div className="font-black uppercase text-sm text-[var(--theme-text)]">
-                  Today's Progress
+                  Today&apos;s Progress
                 </div>
                 <div className="text-xs font-bold text-[var(--theme-text)] opacity-75">
                   {completed} of {target} sessions completed
@@ -180,45 +207,45 @@ export default function DeepFocusPage() {
     );
   };
 
-  // Setup State - Project and Duration Selection
+  // Setup State - Project and Duration Selection  
   const renderSetupState = () => (
-    <div className="min-h-[80vh] flex items-center justify-center">
+    <div className="min-h-[80vh] flex items-center justify-center" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       <div className="max-w-lg w-full">
         {renderProgressSummary()}
         
-        <Card className="bg-[var(--theme-primary)] border-4 border-black p-12">
-          <CardContent className="text-center space-y-6">
-            <Timer className="w-16 h-16 mx-auto text-[var(--theme-text)]" />
-            
-            <h1 className="font-black uppercase tracking-wider text-3xl text-[var(--theme-text)]">
-              Deep Focus Session
-            </h1>
-            
-            <p className="font-bold uppercase text-sm text-[var(--theme-text)] opacity-75">
-              Choose your project and focus duration
-            </p>
+        <Card className="bg-[var(--theme-primary)] border-4 border-black p-12 shadow-[4px_4px_0px_#000000]">
+          <CardContent className="space-y-8">
+            {/* Title with Pink Icon - LEFT ALIGNED */}
+            <div className="mb-8">
+              <div className="flex items-center gap-4 mb-4">
+                <Target className="w-10 h-10 text-[var(--theme-accent)] flex-shrink-0" />
+                <h1 className="text-3xl font-black uppercase tracking-wider text-[var(--theme-text)]">
+                  Deep Focus Session
+                </h1>
+              </div>
+            </div>
 
             {/* Project Selection */}
-            <div className="space-y-3">
-              <label className="block font-black uppercase text-sm text-[var(--theme-text)]">
-                Select Project
+            <div>
+              <label className="text-lg font-black uppercase tracking-wider text-[var(--theme-text)] mb-4 block">
+                What are you working on?
               </label>
               {projects.length > 0 ? (
                 <select
                   value={selectedProject}
                   onChange={(e) => setSelectedProject(e.target.value)}
-                  className="brutal-select w-full text-[var(--theme-text)] bg-[var(--theme-background)]"
+                  className="bg-white border-4 border-black shadow-[4px_4px_0px_#000000] font-black uppercase tracking-wider text-black focus:shadow-[6px_6px_0px_#000000] focus:translate-x-[-2px] focus:translate-y-[-2px] transition-all duration-100 h-12 hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[5px_5px_0px_#000000] w-full"
                 >
-                  <option value="">Choose a project...</option>
+                  <option value="">Select a project</option>
                   {projects.map((project) => (
                     <option key={project.id} value={project.id}>
-                      {project.name} {project.is_boss_battle ? '⭐' : ''}
+                      {project.name}{project.is_boss_battle ? ' ★' : ''}
                     </option>
                   ))}
                 </select>
               ) : (
-                <div className="text-center p-4 bg-[var(--theme-background)] border-4 border-black">
-                  <p className="font-bold uppercase text-sm">
+                <div className="text-center p-4 bg-white border-4 border-black shadow-[4px_4px_0px_#000000]">
+                  <p className="font-black uppercase text-sm">
                     No active projects found
                   </p>
                   <p className="text-xs mt-1 opacity-75">
@@ -229,36 +256,35 @@ export default function DeepFocusPage() {
             </div>
 
             {/* Duration Selection */}
-            <div className="space-y-3">
-              <label className="block font-black uppercase text-sm text-[var(--theme-text)]">
-                Focus Duration
+            <div>
+              <label className="text-lg font-black uppercase tracking-wider text-[var(--theme-text)] mb-4 block">
+                For how long?
               </label>
-              <div className="grid grid-cols-3 gap-2">
-                {[60, 90, 120].map((mins) => (
-                  <Button
+              <div className="grid grid-cols-3 gap-3">
+                {([60, 90, 120] as const).map((mins) => (
+                  <button
                     key={mins}
-                    variant={duration === mins ? "primary" : "secondary"}
-                    size="md"
-                    onClick={() => setDuration(mins as 60 | 90 | 120)}
-                    className="bg-[var(--theme-background)] text-[var(--theme-text)]"
+                    onClick={() => setDuration(mins)}
+                    className={`p-4 border-4 border-black shadow-[4px_4px_0px_#000000] hover:shadow-[6px_6px_0px_#000000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-100 text-center font-black uppercase tracking-wider ${
+                      duration === mins ? 'bg-[var(--theme-accent)] text-black' : 'bg-white text-black'
+                    }`}
                   >
-                    {mins}M
-                  </Button>
+                    <div className="text-lg mb-1">{mins}</div>
+                    <div className="text-xs">min</div>
+                  </button>
                 ))}
               </div>
             </div>
 
             {/* Start Button */}
-            <Button
-              variant="primary"
-              size="lg"
-              disabled={!selectedProject}
+            <button
               onClick={() => setSessionState('willpower')}
-              className="w-full mt-8"
+              disabled={!selectedProject}
+              className="w-full bg-[var(--theme-accent)] text-black border-4 border-black font-black uppercase tracking-wider px-8 py-4 hover:bg-[var(--theme-accent)]/90 transition-all duration-200 hover:translate-x-[-3px] hover:translate-y-[-3px] hover:shadow-[7px_7px_0px_#000000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_#000000] shadow-[4px_4px_0px_#000000] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Play className="w-5 h-5 mr-2" />
-              START SESSION
-            </Button>
+              <Play className="w-5 h-5 inline mr-3" />
+              Start Deep Focus
+            </button>
 
             {projects.length === 0 && (
               <p className="text-xs text-[var(--theme-text)] opacity-50 mt-4">
@@ -272,60 +298,48 @@ export default function DeepFocusPage() {
   );
 
   // Willpower Assessment State
-  const renderWillpowerState = () => (
-    <div className="min-h-[80vh] flex items-center justify-center">
-      <Card className="max-w-lg bg-[var(--theme-primary)] border-8 border-black p-12">
-        <CardContent className="text-center space-y-6">
-          <h2 className="font-black uppercase tracking-wider text-2xl text-[var(--theme-text)]">
-            Willpower Check
-          </h2>
-          
-          <p className="font-bold text-sm text-[var(--theme-text)] opacity-75">
-            How are you feeling right now? This affects your XP multiplier.
-          </p>
+  const renderWillpowerState = () => {
+    const willpowerOptions = [
+      { value: "high" as SessionWillpower, label: "PIECE OF CAKE", sublabel: "HIGH WILLPOWER", icon: Zap },
+      { value: "medium" as SessionWillpower, label: "CAFFEINATED", sublabel: "MEDIUM WILLPOWER", icon: Coffee },
+      { value: "low" as SessionWillpower, label: "DON'T TALK TO ME", sublabel: "LOW WILLPOWER", icon: BatteryLow }
+    ];
 
-          <div className="space-y-3">
-            {[
-              { value: 'high' as SessionWillpower, label: 'PIECE OF CAKE 🔥', description: '1.0x XP - Feeling energized' },
-              { value: 'medium' as SessionWillpower, label: 'CAFFEINATED ☕', description: '1.5x XP - Moderate energy' },
-              { value: 'low' as SessionWillpower, label: "DON'T TALK TO ME 🥱", description: '2.0x XP - Low energy but pushing through' }
-            ].map((option) => (
-              <Button
+    return (
+      <div className="max-w-2xl mx-auto text-center" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+        <h1 className="text-4xl font-black uppercase tracking-wider mb-8 text-[var(--theme-accent)]">WILLPOWER CHECK</h1>
+        
+        <div className="space-y-6">
+          {willpowerOptions.map((option, _index) => {
+            const IconComponent = option.icon;
+            return (
+              <button
                 key={option.value}
-                variant={willpower === option.value ? "primary" : "secondary"}
-                size="lg"
                 onClick={() => setWillpower(option.value)}
-                className="w-full bg-[var(--theme-background)] text-[var(--theme-text)] text-left flex-col items-start py-4"
+                className={`w-full p-6 border-4 border-black shadow-[4px_4px_0px_#000000] hover:shadow-[6px_6px_0px_#000000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-100 bg-[var(--theme-primary)] hover:bg-[var(--theme-primary)]/90 ${
+                  willpower === option.value ? 'ring-4 ring-[var(--theme-accent)]' : ''
+                }`}
               >
-                <div className="font-black uppercase text-sm">{option.label}</div>
-                <div className="text-xs opacity-75 normal-case">{option.description}</div>
-              </Button>
-            ))}
-          </div>
+                <IconComponent className="w-8 h-8 mx-auto mb-3 text-[var(--theme-text)] fill-[var(--theme-text)]" />
+                <div className="text-xl font-black uppercase tracking-wider text-[var(--theme-text)]">{option.label}</div>
+                <div className="text-sm font-bold uppercase tracking-wide text-[var(--theme-text)]/70">{option.sublabel}</div>
+              </button>
+            );
+          })}
+        </div>
 
-          <div className="flex gap-3 mt-8">
-            <Button
-              variant="ghost"
-              size="md"
-              onClick={() => setSessionState('setup')}
-              className="flex-1"
-            >
-              BACK
-            </Button>
-            <Button
-              variant="primary"
-              size="md"
-              disabled={!willpower}
-              onClick={handleStartSession}
-              className="flex-1"
-            >
-              CONTINUE
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
+        <div className="mt-8">
+          <button
+            onClick={handleStartSession}
+            disabled={!willpower}
+            className="bg-[var(--theme-text)] text-[var(--theme-textSecondary)] border-4 border-black font-black uppercase tracking-wider px-12 py-4 hover:bg-[var(--theme-text)]/90 transition-all duration-100 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_#000000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_#000000] shadow-[4px_4px_0px_#000000] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            CONFIRM & START
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   // Active Session State - Use SessionTimerDisplay Component
   const renderActiveState = () => {
@@ -341,22 +355,37 @@ export default function DeepFocusPage() {
     }
     
     return (
-      <SessionTimerDisplay
-        timerState={{
-          remainingTime: timerState.remainingTime,
-          formattedTime: timerState.formattedTime,
-          progress: timerState.progress,
-          isRunning: timerState.isRunning,
-          isPaused: timerState.isPaused,
-          difficultyQuote: getDifficultyQuote(willpower, duration)
-        }}
-        sessionData={{
-          projectName: selectedProjectData.name,
-          duration,
-          willpower
-        }}
-        onInterrupt={() => setModalState('interrupt')}
-      />
+      <div>
+        {/* Navigation Warning Message */}
+        <Card className="bg-yellow-100 border-4 border-yellow-600 mb-4 max-w-4xl mx-auto">
+          <CardContent className="p-4 text-center">
+            <div className="font-black uppercase text-yellow-800 mb-1">
+              ⚠️ STAY ON THIS PAGE
+            </div>
+            <div className="text-sm font-bold text-yellow-700">
+              Navigating to other paintings during your session will freeze the timer. 
+              Beta limitation - we&apos;ll fix this post-launch!
+            </div>
+          </CardContent>
+        </Card>
+        
+        <SessionTimerDisplay
+          timerState={{
+            remainingTime: timerState.remainingTime,
+            formattedTime: timerState.formattedTime,
+            progress: timerState.progress,
+            isRunning: timerState.isRunning,
+            isPaused: timerState.isPaused,
+            difficultyQuote: getDifficultyQuote(willpower, duration)
+          }}
+          sessionData={{
+            projectName: selectedProjectData.name,
+            duration,
+            willpower
+          }}
+          onInterrupt={() => setModalState('interrupt')}
+        />
+      </div>
     );
   };
 
@@ -376,13 +405,15 @@ export default function DeepFocusPage() {
     }
   };
 
+  const activeModal = getActiveModal();
+
   return (
     <div className="pb-32"> {/* Extra bottom padding for navigation grid */}
       {renderCurrentState()}
       
       {/* Daily Commitment Modal */}
       <DailyCommitmentModal
-        isOpen={modalState === 'commitment'}
+        isOpen={activeModal === 'commitment'}
         onCommit={handleDailyCommitment}
         onSkip={handleSkipCommitment}
       />
@@ -390,7 +421,7 @@ export default function DeepFocusPage() {
       {/* Session Completion Modal */}
       {selectedProjectData && willpower && (
         <SessionCompletionModal
-          isOpen={modalState === 'completion'}
+          isOpen={activeModal === 'completion'}
           onComplete={handleCompleteSession}
           sessionData={{
             projectName: selectedProjectData.name,
@@ -399,13 +430,14 @@ export default function DeepFocusPage() {
             difficultyQuote: getDifficultyQuote(willpower, duration)
           }}
           xpEarned={0} // Not used - XP shown in toast after completion
+          isLoading={isCompletingSession}
         />
       )}
       
       {/* Interrupt Confirmation Dialog */}
       {timerState.formattedTime && (
         <InterruptConfirmDialog
-          isOpen={modalState === 'interrupt'}
+          isOpen={activeModal === 'interrupt'}
           onConfirm={handleInterruptSession}
           onCancel={() => setModalState('none')}
           sessionData={{

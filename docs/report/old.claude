@@ -1,0 +1,13 @@
+### Prime
+
+- **Read**: `@docs/brief.md`, `@docs/implementation-plan-v3.md`, `@docs/implementation-log.md`.
+- **Run**:
+```bash
+eza --tree --git-ignore
+```
+- **code patterns**: examine the existing patterns to ensure consistency with the codebase architecture.
+- **DB schema**: use supabase MCP to examine database schema. (project_id: "yhwjxtzqcpuvgktbofph")
+- **absorbing context**: IMPORTANT : don't be in "executive summary" mode trying to quickly absorb context. ULTRATHINK. 
+- **Clarify if needed**: if something is unclear, incoherent, escalate.
+
+If not, then prompt me you are ready to listen to my request.

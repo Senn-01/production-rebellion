@@ -51,7 +51,7 @@ export const InterruptConfirmDialog: React.FC<InterruptConfirmDialogProps> = ({
               Interrupt Session?
             </h2>
             <p className="text-sm font-bold text-orange-700">
-              You're about to abandon your focus session
+              You&apos;re about to abandon your focus session
             </p>
           </div>
         </div>
@@ -90,9 +90,9 @@ export const InterruptConfirmDialog: React.FC<InterruptConfirmDialogProps> = ({
                 What happens if you interrupt:
               </h4>
               <ul className="text-xs text-red-700 space-y-1">
-                <li>• You'll receive only <strong>10 XP</strong> for the attempt</li>
+                <li>• You&apos;ll receive only <strong>10 XP</strong> for the attempt</li>
                 <li>• Progress on this session will be lost</li>
-                <li>• The session won't count toward your daily commitment</li>
+                <li>• The session won&apos;t count toward your daily commitment</li>
               </ul>
             </div>
           </CardContent>
@@ -126,7 +126,7 @@ export const InterruptConfirmDialog: React.FC<InterruptConfirmDialogProps> = ({
         {/* Encouragement */}
         <div className="mt-4 text-center">
           <p className="text-xs text-[var(--theme-text)] opacity-75">
-            💪 You've come this far - why not push through to the end?
+            💪 You&apos;ve come this far - why not push through to the end?
           </p>
         </div>
       </div>

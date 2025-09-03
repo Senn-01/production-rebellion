@@ -13,15 +13,20 @@ export default function AppLayout({
 }) {
   return (
     <ThemeProvider>
-      <div className="min-h-screen transition-colors duration-300" style={{
-        backgroundColor: 'var(--theme-background)',
-        color: 'var(--theme-text)'
-      }}>
+      <div className="min-h-screen bg-[#FFF8DC] text-black">
         {/* Universal Header with Capture Bar */}
         <Header />
         
         {/* Fixed XP Gauge - top right */}
-        <XPGauge className="fixed top-28 right-12 z-40" />
+        <XPGauge 
+          className="z-40" 
+          style={{
+            position: 'fixed',
+            top: '112px',
+            right: '48px',
+            transform: 'none'
+          }}
+        />
         
         {/* Page Content */}
         <main className="relative">

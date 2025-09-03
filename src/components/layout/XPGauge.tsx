@@ -12,16 +12,36 @@
 import React, { useState, useEffect } from 'react';
 import { Zap } from 'lucide-react';
 import { useCurrentWeekXP } from '@/hooks/use-xp';
+import { useTheme } from '@/contexts/ThemeContext';
 import { cn } from '@/lib/utils';
 
 interface XPGaugeProps {
   className?: string;
+  style?: React.CSSProperties;
 }
 
-export const XPGauge: React.FC<XPGaugeProps> = ({ className }) => {
+export const XPGauge: React.FC<XPGaugeProps> = ({ className, style }) => {
+  const { currentTheme } = useTheme();
   const { data: weeklyXP = 0, isLoading } = useCurrentWeekXP();
   const [displayXP, setDisplayXP] = useState(weeklyXP);
   const [isAnimating, setIsAnimating] = useState(false);
+
+  // Get XP gauge background based on current theme
+  const getXPGaugeBackground = () => {
+    return currentTheme === 'tactical' ? 'bg-[#f7f7f5]' : 'bg-white';
+  };
+
+  // Get XP icon styling based on current theme
+  const getXPIconStyling = () => {
+    switch (currentTheme) {
+      case 'focus':
+        return 'text-[var(--theme-text)] fill-[var(--theme-text)]'; // Dark green for focus theme
+      case 'analytics':
+        return 'text-[#451969] fill-[#451969]'; // Dark purple for analytics theme
+      default:
+        return 'text-[#FDE047] fill-[#FDE047]'; // Yellow for tactical map
+    }
+  };
 
   // Animate XP changes with count-up effect
   useEffect(() => {
@@ -51,47 +71,49 @@ export const XPGauge: React.FC<XPGaugeProps> = ({ className }) => {
 
   if (isLoading) {
     return (
-      <div className={cn(
-        'bg-[var(--theme-accent)] border-4 border-black px-4 py-2',
-        'shadow-[4px_4px_0px_#000000]',
-        'flex items-center gap-2',
-        className
-      )}>
-        <Zap className="w-5 h-5 animate-pulse" style={{ color: 'var(--theme-primary)' }} />
-        <span className="font-mono text-lg">---</span>
+      <div 
+        className={cn(
+          getXPGaugeBackground(),
+          'border-4 border-black px-4 py-3',
+          'shadow-[4px_4px_0px_#000000] hover:shadow-[6px_6px_0px_#000000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-100 cursor-pointer',
+          'flex items-center gap-3',
+          className
+        )}
+        style={style}
+      >
+        <Zap className={`w-5 h-5 animate-pulse ${getXPIconStyling()}`} />
+        <span className="font-mono text-base font-black">---</span>
       </div>
     );
   }
 
   return (
-    <div className={cn(
-      'bg-[var(--theme-accent)] border-4 border-black px-4 py-2',
-      'shadow-[4px_4px_0px_#000000]',
-      'flex items-center gap-2',
-      'transition-all duration-100 hover:shadow-[6px_6px_0px_#000000]',
-      'hover:translate-x-[-2px] hover:translate-y-[-2px]',
-      'cursor-default',
-      isAnimating && 'xp-count-up',
-      className
-    )}>
+    <div 
+      className={cn(
+        getXPGaugeBackground(),
+        'border-4 border-black px-4 py-3',
+        'shadow-[4px_4px_0px_#000000] hover:shadow-[6px_6px_0px_#000000] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-100 cursor-pointer',
+        'flex items-center gap-3',
+        isAnimating && 'xp-count-up',
+        className
+      )}
+      style={style}
+    >
       <Zap 
         className={cn(
           'w-5 h-5',
+          getXPIconStyling(),
           isAnimating && 'animate-pulse'
         )} 
-        style={{ color: 'var(--theme-primary)' }} 
       />
       <span 
         className={cn(
-          'font-mono text-lg font-bold',
-          isAnimating && 'text-[var(--theme-primary)]'
+          'font-mono text-base font-black uppercase tracking-wider text-black',
+          isAnimating && getXPIconStyling()
         )}
         title="Points earned this week from completing projects and focus sessions"
       >
         {displayXP.toLocaleString()}
-      </span>
-      <span className="text-sm font-bold uppercase tracking-wide opacity-75">
-        POINTS
       </span>
     </div>
   );

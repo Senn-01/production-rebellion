@@ -8,6 +8,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Loader2 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { SelectionButton } from '@/components/forms/SelectionButton';
@@ -174,7 +175,14 @@ export function AccuracyDialog({ project, onClose }: AccuracyDialogProps) {
             disabled={!selectedAccuracy || isSubmitting}
             className="flex-1"
           >
-            {isSubmitting ? 'COMPLETING...' : 'COMPLETE PROJECT'}
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                COMPLETING...
+              </>
+            ) : (
+              'COMPLETE PROJECT'
+            )}
           </Button>
           <Button
             variant="ghost"

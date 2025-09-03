@@ -373,22 +373,18 @@ export const projectsService = {
 
 /**
  * UI Helper: Calculate project position on cost/benefit matrix
+ * Returns percentage coordinates for CSS positioning
  */
 export function calculateProjectPosition(
-  project: { cost: number; benefit: number },
-  chartDimensions: { width: number; height: number; padding: number } = {
-    width: 800,
-    height: 600,
-    padding: 50
-  }
+  project: { cost: number; benefit: number }
 ): { x: number; y: number } {
-  const { width, height, padding } = chartDimensions;
-  const usableWidth = width - (padding * 2);
-  const usableHeight = height - (padding * 2);
+  // Map 1-10 scale to 10%-90% (avoid edges for better visual spacing)
+  const xPercent = 10 + ((project.cost - 1) / 9) * 80;     // Cost: left→right
+  const yPercent = 10 + ((project.benefit - 1) / 9) * 80;  // Benefit: for UI positioning
   
   return {
-    x: padding + (project.cost / 10) * usableWidth,
-    y: padding + (1 - project.benefit / 10) * usableHeight // Invert Y axis for UI
+    x: xPercent,  // 10-90%: low cost (left) → high cost (right)
+    y: yPercent   // 10-90%: will be inverted in UI for low benefit (bottom) → high benefit (top)
   };
 }
 

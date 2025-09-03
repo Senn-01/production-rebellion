@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Plus, Zap, Archive } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Card, CardContent } from '@/components/ui/Card';
+// import { Card, CardContent } from '@/components/ui/Card'; // Will be used for stats cards
 import { ProjectNode } from '@/components/tactical-map/ProjectNode';
 import { ProjectActions } from '@/components/tactical-map/ProjectActions';
 import { AddProjectModal } from '@/components/modals/AddProjectModal';
@@ -130,7 +131,7 @@ export default function TacticalMapPage() {
     setCurrentTriageIndex(0);
   };
 
-  const handlePromoteParkingItem = (item: { id: string; content: string; parked_at: string }) => {
+  const handlePromoteParkingItem = (item: { id: string; content: string; parked_at: string | null }) => {
     setTriageContent(item.content);
     setIsParkingLotOpen(false);
     setIsAddProjectOpen(true);
@@ -204,198 +205,208 @@ export default function TacticalMapPage() {
         onClose={handleCloseAccuracy}
       />
 
+      {/* Title Section */}
+      <div className="text-center mb-12">
+        <h1 className="text-5xl font-black uppercase tracking-wider mb-4">Strategic View</h1>
+        <p className="text-xl font-bold uppercase tracking-wide text-black/70">Visual Decision-Making Arena</p>
+      </div>
+
       {/* Action Buttons Row */}
-      <div className="flex items-center gap-4 mb-8">
-        <Button 
-          variant="primary" 
-          size="lg"
+      <div className="flex justify-center gap-6 mb-12">
+        <button 
           onClick={() => setIsAddProjectOpen(true)}
+          className="bg-[#FDE047] border-4 border-black font-black uppercase tracking-wider px-8 py-4 hover:bg-[#FDE047]/90 transition-all duration-100 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_#000000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_#000000] shadow-[4px_4px_0px_#000000]"
         >
+          <Plus className="w-5 h-5 inline mr-3" />
           ADD PROJECT
-        </Button>
-        <Button 
-          variant="secondary" 
-          size="lg"
+        </button>
+        
+        <button 
           onClick={() => setIsTriageOpen(true)}
           disabled={pendingCount === 0}
+          className="bg-[#FDE047] border-4 border-black font-black uppercase tracking-wider px-8 py-4 hover:bg-[#FDE047]/90 transition-all duration-100 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_#000000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_#000000] shadow-[4px_4px_0px_#000000] disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {pendingCount > 0 ? `TRIAGE (${pendingCount})` : 'TRIAGE (0)'}
-        </Button>
-        <Button 
-          variant="secondary" 
-          size="lg"
+          <Zap className="w-5 h-5 inline mr-3" />
+          TRIAGE ({pendingCount})
+        </button>
+        
+        <button 
           onClick={() => setIsParkingLotOpen(true)}
+          className="bg-[#FDE047] border-4 border-black font-black uppercase tracking-wider px-8 py-4 hover:bg-[#FDE047]/90 transition-all duration-100 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_#000000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_#000000] shadow-[4px_4px_0px_#000000]"
         >
+          <Archive className="w-5 h-5 inline mr-3" />
           PARKING LOT ({parkingLotItems.length})
-        </Button>
+        </button>
       </div>
 
-      {/* Chart Header */}
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <h2 className="font-black uppercase tracking-wider text-2xl mb-2">
-            Cost vs Benefit Analysis
-          </h2>
-          <p className="font-bold uppercase tracking-wide text-sm opacity-75">
-            {projects.length} projects visible
-          </p>
-        </div>
-        
-        {/* Legend */}
-        <Card className="p-4">
-          <div className="space-y-2 text-sm">
-            <div className="font-bold uppercase tracking-wide mb-3">Legend</div>
-            
-            {/* Categories */}
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-[#9ca3af] border border-black"></div>
-                <span>Work</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-[#f7f7f5] border border-black relative">
-                  <div className="absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,#9ca3af_2px,#9ca3af_3px)]"></div>
-                </div>
-                <span>Learn</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-[#f7f7f5] border border-black relative">
-                  <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_2px,#9ca3af_2px,#9ca3af_3px)]"></div>
-                </div>
-                <span>Build</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-[#f7f7f5] border border-black relative">
-                  <div className="absolute inset-0 bg-[repeating-linear-gradient(90deg,transparent,transparent_2px,#9ca3af_2px,#9ca3af_3px)]"></div>
-                </div>
-                <span>Manage</span>
-              </div>
+      {/* Project Map with Integrated Header */}
+      <div className="max-w-7xl mx-auto mb-12">
+        {/* Integrated Header */}
+        <div className="bg-[#FDE047] border-4 border-black border-b-0 p-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-3xl font-black uppercase tracking-wider mb-2">COST VS BENEFIT ANALYSIS</h2>
+              <p className="text-base font-bold uppercase tracking-wide text-black/70 font-mono">{projects.length} PROJECTS VISIBLE</p>
             </div>
-            
-            {/* Priorities */}
-            <div className="mt-3 space-y-1">
-              <div className="flex items-center gap-2 text-xs">
-                <div className="w-4 h-4 bg-white border-2 border-black shadow-[2px_2px_0px_#FFD700]"></div>
-                <span>Must-Do</span>
+            <div className="flex flex-col gap-3 text-sm font-bold uppercase tracking-wide">
+              <div className="flex items-center gap-6">
+                <span>CATEGORIES:</span>
+                
+                {/* Inline Pattern Legend */}
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-black shadow-[2px_2px_0px_#000000] bg-[#9ca3af]"></div>
+                  <span>WORK</span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-black shadow-[2px_2px_0px_#000000] bg-[#f7f7f5] relative overflow-hidden">
+                    <svg width="100%" height="100%" className="absolute inset-0">
+                      <defs>
+                        <pattern id="legend-learn" patternUnits="userSpaceOnUse" width="8" height="8">
+                          <path d="M-2,2 l4,-4 M0,8 l8,-8 M6,10 l4,-4" stroke="#9ca3af" strokeWidth="1.5"/>
+                        </pattern>
+                      </defs>
+                      <rect width="100%" height="100%" fill="url(#legend-learn)" />
+                    </svg>
+                  </div>
+                  <span>LEARN</span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-black shadow-[2px_2px_0px_#000000] bg-[#f7f7f5] relative overflow-hidden">
+                    <svg width="100%" height="100%" className="absolute inset-0">
+                      <defs>
+                        <pattern id="legend-build" patternUnits="userSpaceOnUse" width="6" height="6">
+                          <path d="M 6 0 L 0 0 0 6" fill="none" stroke="#9ca3af" strokeWidth="1"/>
+                        </pattern>
+                      </defs>
+                      <rect width="100%" height="100%" fill="url(#legend-build)" />
+                    </svg>
+                  </div>
+                  <span>BUILD</span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-black shadow-[2px_2px_0px_#000000] bg-[#f7f7f5] relative overflow-hidden">
+                    <svg width="100%" height="100%" className="absolute inset-0">
+                      <defs>
+                        <pattern id="legend-manage" patternUnits="userSpaceOnUse" width="8" height="6">
+                          <path d="M0,3 L8,3" stroke="#9ca3af" strokeWidth="1.5"/>
+                        </pattern>
+                      </defs>
+                      <rect width="100%" height="100%" fill="url(#legend-manage)" />
+                    </svg>
+                  </div>
+                  <span>MANAGE</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-xs">
-                <div className="w-4 h-4 bg-white border-2 border-black shadow-[2px_2px_0px_#000000]"></div>
-                <span>Should-Do</span>
+              <div className="text-black/60 font-mono text-sm">
+                <span>★ = BOSS BATTLE (WEEKLY FOCUS) • GOLD SHADOW = HIGH PRIORITY</span>
               </div>
-              <div className="flex items-center gap-2 text-xs">
-                <div className="w-4 h-4 bg-white border-2 border-black shadow-[2px_2px_0px_#666666]"></div>
-                <span>Nice-to-Have</span>
-              </div>
-            </div>
-            
-            {/* Boss Battle */}
-            <div className="flex items-center gap-2 text-xs mt-2">
-              <span>⭐</span>
-              <span>Boss Battle</span>
             </div>
           </div>
-        </Card>
-      </div>
+        </div>
 
       {/* Cost/Benefit Grid */}
-      <Card className="relative w-full h-[600px] overflow-hidden bg-[#f7f7f5]">
-        <CardContent className="p-0 h-full">
-          <div className="relative w-full h-full">
-            {/* Grid Lines */}
-            <div className="absolute inset-0 opacity-20">
-              {Array.from({ length: 21 }).map((_, i) => (
-                <div
-                  key={`v-${i}`}
-                  className="absolute top-0 bottom-0 border-l border-gray-400"
-                  style={{ left: `${i * 5}%` }}
-                />
-              ))}
-              {Array.from({ length: 21 }).map((_, i) => (
-                <div
-                  key={`h-${i}`}
-                  className="absolute left-0 right-0 border-t border-gray-400"
-                  style={{ top: `${i * 5}%` }}
-                />
-              ))}
-            </div>
+      <div className="relative bg-[#f7f7f5] border-4 border-black shadow-[4px_4px_0px_#000000]" style={{ height: '800px', width: '100%' }}>
+        {/* Subtle Grid Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          {Array.from({ length: 21 }).map((_, i) => (
+            <div
+              key={`v-${i}`}
+              className="absolute top-0 bottom-0 border-l border-gray-400"
+              style={{ left: `${i * 5}%` }}
+            />
+          ))}
+          {Array.from({ length: 21 }).map((_, i) => (
+            <div
+              key={`h-${i}`}
+              className="absolute left-0 right-0 border-t border-gray-400"
+              style={{ top: `${i * 5}%` }}
+            />
+          ))}
+        </div>
 
-            {/* Main Axes */}
-            <div className="absolute top-0 bottom-0 left-1/2 w-[4px] bg-black transform -translate-x-1/2" />
-            <div className="absolute left-0 right-0 top-1/2 h-[4px] bg-black transform -translate-y-1/2" />
+        {/* Main Axes - Thicker and more prominent */}
+        <div className="absolute top-0 bottom-0 left-1/2 w-[6px] bg-black transform -translate-x-1/2" />
+        <div className="absolute left-0 right-0 top-1/2 h-[6px] bg-black transform -translate-y-1/2" />
 
-            {/* Quadrant Labels */}
-            <div className="absolute top-4 left-4 font-black uppercase text-sm">
-              NO-BRAINER
-              <div className="text-xs font-bold text-black/60 mt-1">Low Cost, High Impact</div>
-            </div>
-            <div className="absolute top-4 right-4 font-black uppercase text-sm text-right">
-              BREAKTHROUGH
-              <div className="text-xs font-bold text-black/60 mt-1">High Cost, High Impact</div>
-            </div>
-            <div className="absolute bottom-4 left-4 font-black uppercase text-sm">
-              SIDE-QUEST
-              <div className="text-xs font-bold text-black/60 mt-1">Low Cost, Low Impact</div>
-            </div>
-            <div className="absolute bottom-4 right-4 font-black uppercase text-sm text-right">
-              TRAP-ZONE
-              <div className="text-xs font-bold text-black/60 mt-1">High Cost, Low Impact</div>
-            </div>
+        {/* Axis Labels */}
+        <div className="absolute top-1/2 left-0 transform -translate-y-1/2 -rotate-90 text-lg font-black uppercase tracking-wide text-black/80 pl-6 font-mono">
+          BENEFIT (IMPACT SCORE) →
+        </div>
+        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 text-lg font-black uppercase tracking-wide text-black/80 pb-6 font-mono">
+          COST (EFFORT SCORE) →
+        </div>
 
-            {/* Axis Labels */}
-            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 font-black uppercase text-xs">
-              EFFORT (COST) →
-            </div>
-            <div className="absolute top-1/2 left-2 transform -translate-y-1/2 -rotate-90 font-black uppercase text-xs">
-              ← IMPACT (BENEFIT)
-            </div>
+        {/* Quadrant Labels - Enhanced typography */}
+        <div className="absolute top-8 left-8">
+          <div className="text-xl font-black uppercase tracking-wider text-black mb-2">NO-BRAINER</div>
+          <div className="text-sm font-bold uppercase tracking-wide text-black/60 font-mono">LOW EFFORT, HIGH IMPACT</div>
+        </div>
 
-            {/* Project Nodes */}
-            {projectsLoading ? (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-4"></div>
-                  <p className="font-bold uppercase text-sm">Loading projects...</p>
-                </div>
-              </div>
-            ) : projects.length === 0 ? (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center max-w-md">
-                  <h3 className="font-black uppercase text-xl mb-4">
-                    Time to Start Strategizing
-                  </h3>
-                  <p className="font-bold uppercase text-sm mb-6 opacity-75">
-                    Your tactical map is empty. Add your first project to begin visualizing your strategic priorities.
-                  </p>
-                  <Button 
-                    variant="primary" 
-                    size="lg"
-                    onClick={() => setIsAddProjectOpen(true)}
-                  >
-                    ADD YOUR FIRST PROJECT
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              // Render project nodes at their calculated positions
-              projects.map((project) => (
-                <div
-                  key={project.id}
-                  className="absolute transform -translate-x-1/2 -translate-y-1/2"
-                  style={{ 
-                    left: `${(project.cost / 10) * 100}%`, 
-                    top: `${100 - (project.benefit / 10) * 100}%`
-                  }}
-                >
-                  <ProjectNode 
-                    project={project}
-                    onClick={handleProjectClick}
-                  />
-                </div>
-              ))
-            )}
+        <div className="absolute top-8 right-8 text-right">
+          <div className="text-xl font-black uppercase tracking-wider text-black mb-2">BREAKTHROUGH</div>
+          <div className="text-sm font-bold uppercase tracking-wide text-black/60 font-mono">HIGH EFFORT, HIGH IMPACT</div>
+        </div>
+
+        <div className="absolute bottom-8 left-8">
+          <div className="text-xl font-black uppercase tracking-wider text-black mb-2">SIDE-QUEST</div>
+          <div className="text-sm font-bold uppercase tracking-wide text-black/60 font-mono">LOW EFFORT, LOW IMPACT</div>
+        </div>
+
+        <div className="absolute bottom-8 right-8 text-right">
+          <div className="text-xl font-black uppercase tracking-wider text-black mb-2">TRAP-ZONE</div>
+          <div className="text-sm font-bold uppercase tracking-wide text-black/60 font-mono">HIGH EFFORT, LOW IMPACT</div>
+        </div>
+
+        {/* Project Nodes */}
+        {projectsLoading ? (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-4"></div>
+              <p className="font-bold uppercase text-sm">Loading projects...</p>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        ) : projects.length === 0 ? (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center max-w-md">
+              <h3 className="font-black uppercase text-xl mb-4">
+                Time to Start Strategizing
+              </h3>
+              <p className="font-bold uppercase text-sm mb-6 opacity-75">
+                Your tactical map is empty. Add your first project to begin visualizing your strategic priorities.
+              </p>
+              <Button 
+                variant="primary" 
+                size="lg"
+                onClick={() => setIsAddProjectOpen(true)}
+              >
+                ADD YOUR FIRST PROJECT
+              </Button>
+            </div>
+          </div>
+        ) : (
+          // Render project nodes at their calculated positions
+          projects.map((project) => (
+            <div
+              key={project.id}
+              className="absolute transform -translate-x-1/2 -translate-y-1/2"
+              style={{ 
+                left: `${project.x}%`, 
+                top: `${100 - project.y}%`
+              }}
+              title={`${project.name} - Priority: ${project.priority}`}
+            >
+              <ProjectNode 
+                project={project}
+                onClick={handleProjectClick}
+              />
+            </div>
+          ))
+        )}
+      </div>
+      </div>
     </div>
   );
 }

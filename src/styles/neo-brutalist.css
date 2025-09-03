@@ -88,7 +88,8 @@
   }
 }
 
-.urgent-timer {
+.urgent-timer,
+.urgent-pulse {
   animation: urgent-pulse 1s ease-in-out infinite;
 }
 

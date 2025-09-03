@@ -13,6 +13,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
+import { playCompletionSound } from '@/lib/audio-utils';
 import { 
   sessionsService,
   sessionTimerUtils,
@@ -53,7 +54,7 @@ export interface UseSessionsResult {
   todaySessions: SessionWithProject[];
   activeSession: SessionWithProject | null;
   todayProgress: {
-    commitment: any;
+    commitment: { target_sessions: number; completed_sessions: number } | null;
     completed: number;
     progress: number;
   } | null;
@@ -255,6 +256,9 @@ export function useSessions({ userId, enableRealtime = true }: UseSessionsOption
         }));
       },
       onComplete: () => {
+        // Play gentle completion sound
+        playCompletionSound().catch(console.warn);
+        
         setTimerState(prev => ({
           ...prev,
           remainingTime: 0,
@@ -333,10 +337,30 @@ export function useSessions({ userId, enableRealtime = true }: UseSessionsOption
           },
           onComplete: () => {
             console.log('[useSessions] Session completed');
+            // Play gentle completion sound
+            playCompletionSound().catch(console.warn);
             setTimerState(prev => ({ ...prev, state: 'completed' }));
           }
         });
         timerRef.current = timer;
+        
+        // Set initial timer state from recovered data
+        const currentTime = timer.getRemainingTime();
+        const currentProgress = timer.getProgress();
+        setTimerState({
+          remainingTime: currentTime,
+          progress: currentProgress,
+          isRunning: storedTimer.state === 'running',
+          isPaused: storedTimer.state === 'paused',
+          state: storedTimer.state,
+          formattedTime: sessionTimerUtils.formatTime(currentTime),
+          difficultyQuote: sessionTimerUtils.getDifficultyQuote(activeSession.willpower, activeSession.duration)
+        });
+        
+        // Resume timer if it was running and not already started
+        if (storedTimer.state === 'running' && timer.getState().state !== 'running' && timer.getState().state !== 'completed') {
+          timer.start();
+        }
       }
     } else if (!activeSession && timerRef.current) {
       // No active session but timer running - cleanup
@@ -344,14 +368,18 @@ export function useSessions({ userId, enableRealtime = true }: UseSessionsOption
     }
   }, [activeSession, startTimer, stopTimer]);
 
-  // Cleanup on unmount
+  // Cleanup on unmount - only destroy if no active session
   useEffect(() => {
     return () => {
-      if (timerRef.current) {
+      if (timerRef.current && !activeSession) {
+        console.log('[useSessions] Component unmounting with no active session - destroying timer');
         timerRef.current.destroy();
+      } else if (timerRef.current && activeSession) {
+        console.log('[useSessions] Component unmounting but active session exists - preserving timer');
+        // Don't destroy timer during navigation - let it persist via localStorage
       }
     };
-  }, []);
+  }, [activeSession]);
 
   // Action wrappers
   const handleStartSession = useCallback(async (data: Omit<SessionCreationData, 'userId'>) => {

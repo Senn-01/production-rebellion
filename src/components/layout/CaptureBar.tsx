@@ -16,9 +16,10 @@ import { usePendingCapturesCount, useCreateCapture } from '@/hooks/use-captures'
 interface CaptureBarProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  brainDumpStyle?: string;
 }
 
-export const CaptureBar: React.FC<CaptureBarProps> = ({ isOpen, onOpenChange }) => {
+export const CaptureBar: React.FC<CaptureBarProps> = ({ isOpen, onOpenChange, brainDumpStyle = 'bg-black text-white' }) => {
   const [content, setContent] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -61,15 +62,13 @@ export const CaptureBar: React.FC<CaptureBarProps> = ({ isOpen, onOpenChange }) 
   if (!isOpen) {
     return (
       <div className="flex items-center gap-4">
-        <Button
+        <button
           onClick={() => onOpenChange(true)}
-          variant="primary"
-          size="md"
-          className="flex items-center gap-2"
+          className={`${brainDumpStyle} border-4 border-black font-black uppercase tracking-wider px-6 py-3 hover:opacity-90 transition-all duration-100 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_#000000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_#000000] shadow-[4px_4px_0px_#000000] flex items-center gap-2`}
         >
           <Plus className="w-5 h-5" />
           BRAIN DUMP
-        </Button>
+        </button>
         
         {/* Show triage count if there are pending items */}
         {pendingCount > 0 && (

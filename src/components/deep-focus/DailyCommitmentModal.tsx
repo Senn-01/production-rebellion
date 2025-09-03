@@ -40,7 +40,7 @@ export const DailyCommitmentModal: React.FC<DailyCommitmentModalProps> = ({
   return (
     <Modal
       isOpen={isOpen}
-      onClose={() => {}} // Prevent closing - must make decision
+      onClose={onSkip} // Allow dismissal via ESC/overlay - same as Skip button
       size="lg"
       className="z-50"
     >

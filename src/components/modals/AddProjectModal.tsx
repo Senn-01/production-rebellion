@@ -172,7 +172,9 @@ export function AddProjectModal({ isOpen, onClose, initialData }: AddProjectModa
         confidence: formData.confidence as ProjectConfidence,
         due_date: formData.dueDate || null,
         description: formData.description || null,
-        tags: formData.tags ? formData.tags.split(',').map(t => t.trim()).filter(Boolean) : null
+        tags: formData.tags ? formData.tags.split(',').map(t => t.trim()).filter(Boolean) : null,
+        x: formData.cost * 10, // Convert cost to UI x coordinate (0-100)
+        y: formData.benefit * 10 // Convert benefit to UI y coordinate (0-100)
       });
 
       // Reset form and close modal
